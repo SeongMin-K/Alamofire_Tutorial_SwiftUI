@@ -13,13 +13,19 @@ class RandomUserViewModel: ObservableObject {
     var subscription = Set<AnyCancellable>()
     @Published var randomUsers = [RandomUser]()
     var baseUrl = "https://randomuser.me/api/?results=100"
+    var refreshActionSubject = PassthroughSubject<(), Never>()
     
     init() {
         print(#fileID, #function, "called")
         fetchRandomUsers()
+        refreshActionSubject.sink { [weak self] _ in
+            guard let self = self else { return }
+            print("RandomUserViewModel - init - refreshActionSubject called")
+            self.fetchRandomUsers()
+        }.store(in: &subscription)
     }
     
-    func fetchRandomUsers() {
+    fileprivate func fetchRandomUsers() {
         print(#fileID, #function, "called")
         AF.request(baseUrl)
             .publishDecodable(type: RandomUserResponse.self)
