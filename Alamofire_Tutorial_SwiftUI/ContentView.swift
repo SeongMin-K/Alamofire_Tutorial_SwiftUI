@@ -32,13 +32,17 @@ class RefreshControlHelper {
 struct ContentView: View {
     @ObservedObject var randomUserViewModel = RandomUserViewModel()
     let refreshControlHelper = RefreshControlHelper()
+    @Environment(\.colorScheme) var scheme
     
     var body: some View {
-        List(randomUserViewModel.randomUsers) { randomUser in
-            RandomUserRowView(randomUser)
+        ZStack {
+            Theme.myBackgroundColor(forScheme: scheme)
+            List(randomUserViewModel.randomUsers) { randomUser in
+                RandomUserRowView(randomUser)
+            }
+            .listStyle(.inset)
+            .introspectTableView { self.configureRefreshControl($0) }
         }
-        .listStyle(.inset)
-        .introspectTableView { self.configureRefreshControl($0) }
     }
 }
 
@@ -51,6 +55,19 @@ extension ContentView {
         refreshControlHelper.parentContentView = self
         myRefresh.addTarget(refreshControlHelper, action: #selector(RefreshControlHelper.didRefresh), for: .valueChanged)
         tableView.refreshControl = myRefresh
+    }
+}
+
+struct Theme {
+    static func myBackgroundColor(forScheme scheme: ColorScheme) -> Color {
+        let lightColor = Color.white
+        let darkColor = Color.black
+        
+        switch scheme {
+        case .light:        return lightColor
+        case .dark:         return darkColor
+        @unknown default:   return lightColor
+        }
     }
 }
 
